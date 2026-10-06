@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NovaCart | Login</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e0f2fe, #eff6ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #111827;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .login-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6b7280;
+        }
+
+        .register-link a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #374151;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+    <div class="logo">
+        NovaCart
+    </div>
+
+    <h2>
+        Login to Your Account
+    </h2>
+
+    <form id="loginForm">
+
+        <div class="form-group">
+
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Enter your email"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Enter your password"
+                required
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="login-btn"
+        >
+            Login
+        </button>
+
+    </form>
+
+
+    <div
+        id="message"
+        class="message"
+    ></div>
+
+
+    <div class="register-link">
+
+        Don't have an account?
+
+        <a href="register.html">
+            Register
+        </a>
+
+    </div>
+
+
+    <a
+        href="index.html"
+        class="back-link"
+    >
+        ← Back to Store
+    </a>
+
+</div>
+
+
+<script>
+
+const API_URL = "http://localhost:3000/api";
+
+
+document
+    .getElementById("loginForm")
+    .addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+
+            const email =
+                document
+                    .getElementById("email")
+                    .value
+                    .trim();
+
+
+            const password =
+                document
+                    .getElementById("password")
+                    .value;
+
+
+            const message =
+                document.getElementById(
+                    "message"
+                );
+
+
+            message.textContent =
+                "Logging in...";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/login`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                email: email,
+                                password: password
+                            })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    message.textContent =
+                        data.message ||
+                        "Login failed.";
+
+                    return;
+                }
+
+
+                /* SAVE LOGIN TOKEN */
+
+                localStorage.setItem(
+                    "novaToken",
+                    data.token
+                );
+
+
+                /* SAVE USER */
+
+                localStorage.setItem(
+                    "novaUser",
+                    JSON.stringify(
+                        data.user
+                    )
+                );
+
+
+                message.textContent =
+                    "Login successful!";
+
+
+                /* GO TO HOME */
+
+                setTimeout(() => {
+
+                    window.location.href =
+                        "index.html";
+
+                }, 800);
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    "Cannot connect to server. Please make sure the backend is running.";
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaCart - Product Details</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      color: #222;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 18px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 26px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 16px;
+    }
+
+    nav a:hover {
+      color: #38bdf8;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 60px auto;
+      padding: 20px;
+    }
+
+    .product-box {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      display: flex;
+      gap: 50px;
+      align-items: center;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    .product-image {
+      width: 45%;
+      height: 350px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      border-radius: 12px;
+      font-size: 100px;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-info h2 {
+      font-size: 35px;
+      margin-bottom: 15px;
+    }
+
+    .description {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .price {
+      font-size: 28px;
+      font-weight: bold;
+      color: #16a34a;
+      margin-bottom: 25px;
+    }
+
+    .add-btn {
+      border: none;
+      background: #16a34a;
+      color: white;
+      padding: 14px 25px;
+      border-radius: 8px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .add-btn:hover {
+      background: #15803d;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-top: 25px;
+      text-decoration: none;
+      color: #111827;
+      font-weight: bold;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      .product-box {
+        flex-direction: column;
+        padding: 25px;
+      }
+
+      .product-image {
+        width: 100%;
+        height: 280px;
+      }
+
+      .product-info {
+        width: 100%;
+      }
+
+      nav a {
+        margin-left: 8px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>NovaCart</h1>
+
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="index.html#products">Products</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <div class="container">
+
+    <div class="product-box">
+
+      <div class="product-image" id="productImage">
+        🛍️
+      </div>
+
+      <div class="product-info">
+
+        <h2 id="productName">Loading...</h2>
+
+        <p class="description" id="productDescription">
+          Loading product details...
+        </p>
+
+        <div class="price" id="productPrice">
+          Loading...
+        </div>
+
+        <button class="add-btn" onclick="addToCart()">
+          Add to Cart
+        </button>
+
+        <p id="message"></p>
+
+      </div>
+
+    </div>
+
+    <a href="index.html#products" class="back-btn">
+      ← Back to Products
+    </a>
+
+  </div>
+
+
+  <script>
+
+    const API = "http://localhost:3000/api";
+
+    let currentProduct = null;
+
+
+    async function loadProduct() {
+
+      try {
+
+        const params = new URLSearchParams(window.location.search);
+
+        const productId = params.get("id");
+
+        if (!productId) {
+
+          document.getElementById("productName").textContent =
+            "Product not found";
+
+          document.getElementById("productDescription").textContent =
+            "No product ID was provided.";
+
+          document.getElementById("productPrice").textContent = "";
+
+          return;
+        }
+
+
+        const response = await fetch(
+          `${API}/products/${productId}`
+        );
+
+
+        if (!response.ok) {
+
+          throw new Error("Product not found");
+
+        }
+
+
+        const product = await response.json();
+
+
+        currentProduct = product;
+
+
+        document.getElementById("productName").textContent =
+          product.name || "Product";
+
+
+        document.getElementById("productDescription").textContent =
+          product.description || "No description available.";
+
+
+        document.getElementById("productPrice").textContent =
+          `$${Number(product.price).toFixed(2)}`;
+
+
+        if (product.image) {
+
+          document.getElementById("productImage").innerHTML =
+            `<img src="${product.image}"
+                  alt="${product.name}"
+                  style="max-width:100%;max-height:100%;object-fit:contain;">`;
+
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("productName").textContent =
+          "Product not found";
+
+        document.getElementById("productDescription").textContent =
+          "Unable to load product details.";
+
+        document.getElementById("productPrice").textContent = "";
+
+      }
+
+    }
+
+
+    function addToCart() {
+
+      if (!currentProduct) {
+
+        alert("Product is not available.");
+
+        return;
+
+      }
+
+
+      let cart =
+        JSON.parse(localStorage.getItem("novacartCart")) || [];
+
+
+      const existingProduct =
+        cart.find(item => item.id === currentProduct.id);
+
+
+      if (existingProduct) {
+
+        existingProduct.quantity += 1;
+
+      } else {
+
+        cart.push({
+
+          id: currentProduct.id,
+
+          name: currentProduct.name,
+
+          price: Number(currentProduct.price),
+
+          quantity: 1
+
+        });
+
+      }
+
+
+      localStorage.setItem(
+        "novacartCart",
+        JSON.stringify(cart)
+      );
+
+
+      document.getElementById("message").textContent =
+        "Product added to cart successfully!";
+
+    }
+
+
+    loadProduct();
+
+  </script>
+
+</body>
+</html>
