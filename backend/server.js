@@ -6,7 +6,10 @@ const Database = require("better-sqlite3");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 const app = express();
-
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
 const PORT = 3000;
 const JWT_SECRET = "novacart_secret_key_2026";
 
@@ -835,31 +838,45 @@ app.post(
       // ------------------------------------------
       // Create order
       // ------------------------------------------
+const { data: order, error: orderError } =
+  await supabase
+    .from("orders")
+    .insert({
+      user_id: req.user.id,
+      total: total,
+      status: "Pending"
+    })
+    .select()
+    .single();
 
-      const createOrder =
-        db.transaction(() => {
+if (orderError) {
+  console.error(orderError);
+  return res.status(500).json({
+    message: "Unable to create order."
+  });
+}
 
-          const orderResult =
-            db.prepare(`
+const orderId = order.id;
 
-              INSERT INTO orders
-              (user_id, total, status)
+const itemsToInsert = orderItems.map(item => ({
+  order_id: orderId,
+  product_id: item.productId,
+  quantity: item.quantity,
+  price: item.price
+}));
 
-              VALUES
-              (?, ?, ?)
+const { error: itemsError } =
+  await supabase
+    .from("order_items")
+    .insert(itemsToInsert);
 
-            `).run(
-
-              req.user.id,
-
-              total,
-
-              "Pending"
-
-            );
-
-
-          const orderId =
+if (itemsError) {
+  console.error(itemsError);
+  return res.status(500).json({
+    message: "Unable to save order items."
+  });
+}
+      
             orderResult.lastInsertRowid;
 
 
@@ -940,16 +957,24 @@ app.post(
 app.get(
   "/api/orders",
   authenticateToken,
-  (req, res) => {
+ async (req, res) => {
 
-    try {
+    const { data: orders, error } =
+  await supabase
+    .from("orders")
+    .select("id, total, status, created_at")
+    .eq("user_id", req.user.id)
+    .order("id", { ascending: false });
 
-      const orders =
-        db.prepare(`
+if (error) {
+  console.error(error);
 
-          SELECT
+  return res.status(500).json({
+    message: "Unable to load orders."
+  });
+}
 
-            id,
+res.json(orders);
 
             total,
 
