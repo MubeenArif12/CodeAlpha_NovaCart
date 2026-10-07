@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Database = require("better-sqlite3");
 const path = require("path");
-
+const { createClient } = require("@supabase/supabase-js");
 const app = express();
 
 const PORT = 3000;
